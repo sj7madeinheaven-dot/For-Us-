@@ -52,7 +52,6 @@ jobs:
 
   build-signed-release:
     runs-on: macos-latest
-    if: ${{ secrets.IOS_SIGNING_CERT_BASE64 != '' && secrets.IOS_PROFILE_BASE64 != '' && secrets.IOS_SIGNING_PASSWORD != '' && secrets.IOS_TEAM_ID != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -75,6 +74,18 @@ jobs:
       - name: Install Pods
         working-directory: ios/App
         run: pod install
+
+      - name: Check signing secrets
+        env:
+          IOS_SIGNING_CERT_BASE64: ${{ secrets.IOS_SIGNING_CERT_BASE64 }}
+          IOS_PROFILE_BASE64: ${{ secrets.IOS_PROFILE_BASE64 }}
+          IOS_SIGNING_PASSWORD: ${{ secrets.IOS_SIGNING_PASSWORD }}
+          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+        run: |
+          if [ -z "$IOS_SIGNING_CERT_BASE64" ] || [ -z "$IOS_PROFILE_BASE64" ] || [ -z "$IOS_SIGNING_PASSWORD" ] || [ -z "$IOS_TEAM_ID" ]; then
+            echo "Missing iOS signing secrets. Skipping signed release build."
+            exit 1
+          fi
 
       - name: Import signing certificate
         env:
