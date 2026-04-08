@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>For Us | Real-Time Partner Location Sharing</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar card">
+        <div class="brand-block">
+          <p class="eyebrow">Realtime partner app</p>
+          <h1>For Us</h1>
+          <p class="muted">
+            Private room-based location sharing, chat, and saved places for two
+            people who want a steady live connection.
+          </p>
+        </div>
+
+        <section class="stack gap-md">
+          <section class="stack gap-sm">
+            <div class="panel-title-row">
+              <p class="section-label">Theme</p>
+              <span id="themeStatus" class="micro-status">Light</span>
+            </div>
+
+            <div class="theme-toggle">
+              <button id="lightThemeButton" class="secondary-btn" type="button">
+                Light
+              </button>
+              <button id="darkThemeButton" class="ghost-btn" type="button">
+                Dark
+              </button>
+            </div>
+          </section>
+
+          <div class="notice" id="configNotice">
+            Add your Firebase config in <code>firebase-config.js</code> to turn
+            on authentication and real-time sync.
+          </div>
+
+          <form id="authForm" class="stack gap-sm">
+            <div class="panel-title-row">
+              <p class="section-label">Account</p>
+              <button id="authModeToggle" class="ghost-btn" type="button">
+                Switch to Sign up
+              </button>
+            </div>
+
+            <label class="field">
+              <span>Email</span>
+              <input id="authEmail" type="email" placeholder="you@example.com" />
+            </label>
+
+            <label class="field">
+              <span>Password</span>
+              <input
+                id="authPassword"
+                type="password"
+                minlength="6"
+                placeholder="Minimum 6 characters"
+              />
+            </label>
+
+            <label class="field">
+              <span>Display name</span>
+              <input id="displayName" type="text" maxlength="24" placeholder="Avery" />
+            </label>
+
+            <button id="authSubmit" class="primary-btn" type="submit">
+              Sign in
+            </button>
+          </form>
+
+          <section class="stack gap-sm">
+            <div class="panel-title-row">
+              <p class="section-label">Session</p>
+              <span id="authStatus" class="micro-status">Signed out</span>
+            </div>
+
+            <div class="account-card">
+              <strong id="accountName">Not connected</strong>
+              <small id="accountEmail">Sign in to create or join a shared room.</small>
+            </div>
+
+            <button id="logoutButton" class="secondary-btn" type="button" disabled>
+              Log out
+            </button>
+          </section>
+
+          <section class="stack gap-sm">
+            <div class="panel-title-row">
+              <p class="section-label">Pairing</p>
+              <span id="roomStatus" class="micro-status">No room</span>
+            </div>
+
+            <div class="invite-card">
+              <div>
+                <p class="section-label">Room code</p>
+                <strong id="activeRoomCode">Not joined</strong>
+              </div>
+              <button id="createRoomButton" class="secondary-btn" type="button">
+                Create room
+              </button>
+            </div>
+
+            <form id="joinRoomForm" class="stack gap-sm">
+              <label class="field">
+                <span>Join with code</span>
+                <input id="joinRoomCode" type="text" maxlength="14" placeholder="TETH-8K3P2Q" />
+              </label>
+              <button class="primary-btn" type="submit">Join room</button>
+            </form>
+
+            <button id="leaveRoomButton" class="ghost-btn" type="button" disabled>
+              Leave room
+            </button>
+          </section>
+
+          <section class="status-strip">
+            <div>
+              <p class="section-label">Location sharing</p>
+              <strong id="shareStatus">Paused</strong>
+            </div>
+            <button id="toggleSharing" class="primary-btn" type="button" disabled>
+              Start sharing
+            </button>
+          </section>
+        </section>
+      </aside>
+
+      <main class="dashboard">
+        <section class="hero card">
+          <div class="hero-copy">
+            <p class="eyebrow">Live connection</p>
+            <h2>See each other in real time, not just after a refresh.</h2>
+            <p class="muted">
+              For Us now uses Firebase Authentication and Realtime Database so
+              two signed-in partners can share updates in the same room.
+            </p>
+          </div>
+
+          <div class="hero-badges">
+            <div class="metric-pill">
+              <span>Partner status</span>
+              <strong id="partnerStatus">Waiting for room</strong>
+            </div>
+            <div class="metric-pill">
+              <span>Last location ping</span>
+              <strong id="lastUpdated">No live data</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="grid">
+          <article class="card map-card">
+            <div class="panel-header">
+              <div>
+                <p class="section-label">Location feed</p>
+                <h3>Shared coordinates</h3>
+              </div>
+              <span id="watchBadge" class="badge badge-offline">Offline</span>
+            </div>
+
+            <div class="map-surface">
+              <div class="pulse pulse-self"></div>
+              <div class="pulse pulse-partner"></div>
+              <div class="map-overlay">
+                <p id="locationSummary">
+                  Sign in, join a room, and start sharing to publish your live
+                  coordinates to your partner.
+                </p>
+              </div>
+            </div>
+
+            <div class="coordinate-grid">
+              <div class="coordinate-tile">
+                <span>Your latitude</span>
+                <strong id="latitudeValue">--</strong>
+              </div>
+              <div class="coordinate-tile">
+                <span>Your longitude</span>
+                <strong id="longitudeValue">--</strong>
+              </div>
+              <div class="coordinate-tile">
+                <span>Accuracy</span>
+                <strong id="accuracyValue">--</strong>
+              </div>
+            </div>
+
+            <div class="partner-card">
+              <div>
+                <p class="section-label">Partner snapshot</p>
+                <strong id="partnerCoordinates">No partner location yet</strong>
+              </div>
+              <small id="partnerTimestamp" class="muted">
+                Their latest update will appear here.
+              </small>
+            </div>
+          </article>
+
+          <article class="card chat-card">
+            <div class="panel-header">
+              <div>
+                <p class="section-label">Text feature</p>
+                <h3>Realtime messages</h3>
+              </div>
+            </div>
+
+            <div id="messageList" class="message-list" aria-live="polite"></div>
+
+            <form id="messageForm" class="message-form">
+              <label class="field">
+                <span>Message</span>
+                <textarea
+                  id="messageInput"
+                  rows="3"
+                  maxlength="180"
+                  placeholder="Leaving work now. Sharing is on."
+                ></textarea>
+              </label>
+              <button class="primary-btn" type="submit">Send message</button>
+            </form>
+          </article>
+
+          <article class="card places-card">
+            <div class="panel-header">
+              <div>
+                <p class="section-label">Saved locations</p>
+                <h3>Shared places</h3>
+              </div>
+            </div>
+
+            <form id="placeForm" class="place-form">
+              <label class="field">
+                <span>Place name</span>
+                <input id="placeName" type="text" maxlength="36" placeholder="Home" />
+              </label>
+              <label class="field">
+                <span>Note</span>
+                <input
+                  id="placeNote"
+                  type="text"
+                  maxlength="60"
+                  placeholder="Use this for safe-arrival check-ins"
+                />
+              </label>
+              <button class="secondary-btn" type="submit">Save current location</button>
+            </form>
+
+            <div id="placesList" class="places-list"></div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="./app.firebase.js"></script>
+  </body>
+</html>

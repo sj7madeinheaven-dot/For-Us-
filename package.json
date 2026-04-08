@@ -1,0 +1,17 @@
+{
+  "name": "tether-location-share",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Partner location sharing app packaged with Capacitor for Android and iOS builds.",
+  "scripts": {
+    "cap:sync": "npx cap sync",
+    "cap:open:android": "npx cap open android",
+    "cap:open:ios": "npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.6.1",
+    "@capacitor/cli": "^7.6.1",
+    "@capacitor/core": "^7.6.1",
+    "@capacitor/ios": "^7.6.1"
+  }
+}

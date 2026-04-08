@@ -1,0 +1,16 @@
+Tether release keystore information
+
+Keystore file:
+tether-release-key-v2.jks
+
+Key alias:
+tetherrelease
+
+Store password:
+cVtO2eAh3l31tdzMWyci6IjK
+
+Key password:
+cVtO2eAh3l31tdzMWyci6IjK
+
+Note:
+The generated keystore uses PKCS12, so the key password matches the store password.

@@ -1,0 +1,53 @@
+Realtime Database rules example:
+
+{
+  "rules": {
+    "roomCodes": {
+      "$roomId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "rooms": {
+      "$roomId": {
+        ".read": "auth != null && root.child('rooms/' + $roomId + '/members/' + auth.uid).exists()",
+        "meta": {
+          ".write": "auth != null"
+        },
+        "members": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid"
+          }
+        },
+        "messages": {
+          ".indexOn": ["createdAt"],
+          "$messageId": {
+            ".write": "auth != null && root.child('rooms/' + $roomId + '/members/' + auth.uid).exists()"
+          }
+        },
+        "places": {
+          ".indexOn": ["createdAt"],
+          "$placeId": {
+            ".write": "auth != null && root.child('rooms/' + $roomId + '/members/' + auth.uid).exists()"
+          }
+        },
+        "locations": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && root.child('rooms/' + $roomId + '/members/' + auth.uid).exists()"
+          }
+        },
+        "presence": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && root.child('rooms/' + $roomId + '/members/' + auth.uid).exists()"
+          }
+        }
+      }
+    }
+  }
+}
