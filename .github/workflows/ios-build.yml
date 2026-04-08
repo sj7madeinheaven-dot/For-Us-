@@ -52,6 +52,11 @@ jobs:
 
   build-signed-release:
     runs-on: macos-latest
+    env:
+      IOS_SIGNING_CERT_BASE64: ${{ secrets.IOS_SIGNING_CERT_BASE64 }}
+      IOS_PROFILE_BASE64: ${{ secrets.IOS_PROFILE_BASE64 }}
+      IOS_SIGNING_PASSWORD: ${{ secrets.IOS_SIGNING_PASSWORD }}
+      IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -76,21 +81,16 @@ jobs:
         run: pod install
 
       - name: Check signing secrets
-        env:
-          IOS_SIGNING_CERT_BASE64: ${{ secrets.IOS_SIGNING_CERT_BASE64 }}
-          IOS_PROFILE_BASE64: ${{ secrets.IOS_PROFILE_BASE64 }}
-          IOS_SIGNING_PASSWORD: ${{ secrets.IOS_SIGNING_PASSWORD }}
-          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
         run: |
           if [ -z "$IOS_SIGNING_CERT_BASE64" ] || [ -z "$IOS_PROFILE_BASE64" ] || [ -z "$IOS_SIGNING_PASSWORD" ] || [ -z "$IOS_TEAM_ID" ]; then
-            echo "Missing iOS signing secrets. Skipping signed release build."
-            exit 1
+            echo "skip_signed_build=true" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+          echo "skip_signed_build=false" >> "$GITHUB_OUTPUT"
+        id: signing_check
 
       - name: Import signing certificate
-        env:
-          IOS_SIGNING_CERT_BASE64: ${{ secrets.IOS_SIGNING_CERT_BASE64 }}
-          IOS_SIGNING_PASSWORD: ${{ secrets.IOS_SIGNING_PASSWORD }}
+        if: steps.signing_check.outputs.skip_signed_build == 'false'
         run: |
           CERT_PATH=$RUNNER_TEMP/ios-signing-cert.p12
           echo "$IOS_SIGNING_CERT_BASE64" | base64 --decode > "$CERT_PATH"
@@ -100,8 +100,7 @@ jobs:
           security unlock-keychain -p "" ~/Library/Keychains/build.keychain
 
       - name: Install provisioning profile
-        env:
-          IOS_PROFILE_BASE64: ${{ secrets.IOS_PROFILE_BASE64 }}
+        if: steps.signing_check.outputs.skip_signed_build == 'false'
         run: |
           PROFILE_PATH=$RUNNER_TEMP/for-us.mobileprovision
           echo "$IOS_PROFILE_BASE64" | base64 --decode > "$PROFILE_PATH"
@@ -109,8 +108,7 @@ jobs:
           cp "$PROFILE_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/
 
       - name: Create export options
-        env:
-          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+        if: steps.signing_check.outputs.skip_signed_build == 'false'
         run: |
           cat > ios/App/exportOptions.plist <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
@@ -128,9 +126,8 @@ jobs:
           EOF
 
       - name: Archive app
+        if: steps.signing_check.outputs.skip_signed_build == 'false'
         working-directory: ios/App
-        env:
-          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
         run: >
           xcodebuild
           -workspace App.xcworkspace
@@ -142,9 +139,8 @@ jobs:
           archive
 
       - name: Export IPA
+        if: steps.signing_check.outputs.skip_signed_build == 'false'
         working-directory: ios/App
-        env:
-          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
         run: >
           xcodebuild
           -exportArchive
@@ -153,6 +149,7 @@ jobs:
           -exportPath build/export
 
       - name: Upload IPA
+        if: steps.signing_check.outputs.skip_signed_build == 'false'
         uses: actions/upload-artifact@v4
         with:
           name: for-us-ios-release
